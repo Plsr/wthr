@@ -1,18 +1,14 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
+import LocationInput from './LocationInput'
 
-class App extends Component {
-  constructor(props) {
-    super(props)
+function App() {
+  const [weatherData, setWeatherData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [location, setLocation] = useState(undefined)
 
-    this.state = {
-      loading: true,
-      weatherData: []
-    }
-  }
-
-  componentDidMount() {
+  function getCurrentWeatherData(city) {
     fetch(
-      `http://api.openweathermap.org/data/2.5/weather?q=cologne,de&APPID=${
+      `http://api.openweathermap.org/data/2.5/weather?q=${city}&APPID=${
         process.env.REACT_APP_OWM_API_KEY
       }`
     ).then(res => {
@@ -21,26 +17,34 @@ class App extends Component {
         console.error(res)
         return
       }
-      res.json().then(function(data) {
-        console.log(data)
-      })
+      res
+        .json()
+        .then(function(data) {
+          console.log('Request successful')
+          console.log(data)
+          return data
+        })
+        .then(res => {
+          console.log(res)
+          setWeatherData(res)
+          setLoading(false)
+        })
     })
   }
 
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          {this.state.loading && <div>Loading</div>}
-          {!this.state.loading && (
-            <p>
-              Edit <code>src/App.js</code> and save to reload.
-            </p>
-          )}
-        </header>
-      </div>
-    )
+  function handleLocationSubmit(location) {
+    setLocation(location)
+    getCurrentWeatherData(location)
   }
+
+  return (
+    <React.Fragment>
+      <LocationInput onSubmit={handleLocationSubmit} />
+      <div>Chosen Location: {location || 'none yet'}</div>
+      {loading && <div>Loading</div>}
+      {!loading && <p>{JSON.stringify(weatherData)}</p>}
+    </React.Fragment>
+  )
 }
 
 export default App
